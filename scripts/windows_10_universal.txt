@@ -1,0 +1,6 @@
+<ItemGroup>
+<Reference Include="AdjustWinRT">
+<HintPath>..\..\plugins\com.adjust.sdk\src\windows\AdjustUAP10WinRT\AdjustUAP10WinRT\bin\Release\AdjustWinRT.winmd</HintPath>
+<IsWinMDFile>true</IsWinMDFile>
+</Reference>
+</ItemGroup>

@@ -11,8 +11,8 @@
     <author>adjust</author>
 
     <engines>
-        <engine name="cordova-android" version=">=4.0.0" />
         <engine name="cordova-ios" version=">=3.0.0" />
+        <engine name="cordova-android" version=">=4.0.0" />
     </engines>
 
     <js-module src="www/adjust.js" name="Adjust">
@@ -25,7 +25,7 @@
         <clobbers target="AdjustEvent" />
     </js-module>
 
-    <!-- Android -->
+    <!-- android -->
     <platform name="android">
         <config-file target="AndroidManifest.xml" parent="/manifest">
             <uses-permission android:name="android.permission.INTERNET" />
@@ -49,13 +49,13 @@
             </feature>
         </config-file>
 
-        <source-file src="src/Android/AdjustCordova.java" target-dir="src/com/adjust/sdk" />
-        <source-file src="src/Android/adjust-android.jar" target-dir="libs" />
+        <source-file src="src/android/AdjustCordova.java" target-dir="src/com/adjust/sdk" />
+        <source-file src="src/android/adjust-android.jar" target-dir="libs" />
 
         <framework src="com.google.android.gms:play-services-analytics:+" />
     </platform>
 
-    <!-- iOS -->
+    <!-- ios -->
     <platform name="ios">
         <config-file target="config.xml" parent="/*">
             <feature name="Adjust">
@@ -64,11 +64,25 @@
           </feature>
         </config-file>
 
-        <header-file src="src/iOS/AdjustCordova.h" />
-        <source-file src="src/iOS/AdjustCordova.m" />
+        <header-file src="src/ios/AdjustCordova.h" />
+        <source-file src="src/ios/AdjustCordova.m" />
 
         <framework src="src/iOS/AdjustSdk.framework" custom="true" />
         <framework src="AdSupport.framework" weak="true" />
         <framework src="iAd.framework" weak="true" />
+    </platform>
+
+    <!-- windows -->
+    <platform name="windows">
+        <js-module name="adjust_proxy" src="src/windows/adjust_proxy.js">
+            <runs />
+        </js-module>
+        
+        <hook type="before_build" src="scripts/windows_10_universal_refs_fix.js" />
+        <hook type="before_build" src="scripts/windows_81_phone_refs_fix.js" />
+        <hook type="before_build" src="scripts/windows_81_store_refs_fix.js" />
+        <!-- <hook type="before_build" src="scripts/windows_10_universal_refs_fix.bat" />
+        <hook type="before_build" src="scripts/windows_81_phone_refs_fix.bat" />
+        <hook type="before_build" src="scripts/windows_81_store_refs_fix.bat" /> -->
     </platform>
 </plugin>

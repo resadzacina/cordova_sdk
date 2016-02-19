@@ -6,7 +6,8 @@
     "license": "MIT License",
     "platforms": [
         "ios",
-        "android"
+        "android",
+        "windows"
     ],
     "engines": [
         {
