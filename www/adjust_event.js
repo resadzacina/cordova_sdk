@@ -4,13 +4,14 @@ function AdjustEvent(eventToken) {
 
     this.revenue = null;
     this.currency = null;
-    this.transactionId = null;
 
     this.callbackParameters = [];
     this.partnerParameters = [];
 
     // iOS only
     this.receipt = null;
+    this.transactionId = null;
+
     this.isReceiptSet = false;
 }
 

@@ -9,43 +9,27 @@
 #import <Cordova/CDVPluginResult.h>
 #import "AdjustCordova.h"
 
-#define KEY_APP_TOKEN               @"appToken"
-#define KEY_ENVIRONMENT             @"environment"
-#define KEY_LOG_LEVEL               @"logLevel"
-#define KEY_SDK_PREFIX              @"sdkPrefix"
-#define KEY_DEFAULT_TRACKER         @"defaultTracker"
-#define KEY_EVENT_BUFFERING_ENABLED @"eventBufferingEnabled"
-#define KEY_EVENT_TOKEN             @"eventToken"
-#define KEY_REVENUE                 @"revenue"
-#define KEY_CURRENCY                @"currency"
-#define KEY_RECEIPT                 @"receipt"
-#define KEY_TRANSACTION_ID          @"transactionId"
-#define KEY_CALLBACK_PARAMETERS     @"callbackParameters"
-#define KEY_PARTNER_PARAMETERS      @"partnerParameters"
-#define KEY_IS_RECEIPT_SET          @"isReceiptSet"
-#define KEY_USER_AGENT              @"userAgent"
-#define KEY_REFERRER                @"referrer"
-#define KEY_SHOULD_LAUNCH_DEEPLINK  @"shouldLaunchDeeplink"
-#define KEY_SEND_IN_BACKGROUND      @"sendInBackground"
-#define KEY_DELAY_START             @"delayStart"
+#define KEY_APP_TOKEN                   @"appToken"
+#define KEY_ENVIRONMENT                 @"environment"
+#define KEY_LOG_LEVEL                   @"logLevel"
+#define KEY_SDK_PREFIX                  @"sdkPrefix"
+#define KEY_DEFAULT_TRACKER             @"defaultTracker"
+#define KEY_EVENT_BUFFERING_ENABLED     @"eventBufferingEnabled"
+#define KEY_EVENT_TOKEN                 @"eventToken"
+#define KEY_REVENUE                     @"revenue"
+#define KEY_CURRENCY                    @"currency"
+#define KEY_RECEIPT                     @"receipt"
+#define KEY_TRANSACTION_ID              @"transactionId"
+#define KEY_CALLBACK_PARAMETERS         @"callbackParameters"
+#define KEY_PARTNER_PARAMETERS          @"partnerParameters"
+#define KEY_IS_RECEIPT_SET              @"isReceiptSet"
 
 @implementation AdjustCordova {
-NSString *attributionCallbackId;
-NSString *eventSucceededCallbackId;
-NSString *eventFailedCallbackId;
-NSString *sessionSucceededCallbackId;
-NSString *sessionFailedCallbackId;
-NSString *deferredDeeplinkCallbackId;
-BOOL _shouldLaunchDeeplink;
+    NSString *callbackId;
 }
 
 - (void)pluginInitialize {
-    attributionCallbackId = nil;
-    eventSucceededCallbackId = nil;
-    eventFailedCallbackId = nil;
-    sessionSucceededCallbackId = nil;
-    sessionFailedCallbackId = nil;
-    deferredDeeplinkCallbackId = nil;
+    callbackId = nil;
 }
 
 - (void)adjustAttributionChanged:(ADJAttribution *)attribution {
@@ -54,54 +38,7 @@ BOOL _shouldLaunchDeeplink;
     CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:attributionDictionary];
     pluginResult.keepCallback = [NSNumber numberWithBool:YES];
 
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:attributionCallbackId];
-}
-
-- (void)adjustEventTrackingSucceeded:(ADJEventSuccess *)eventSuccessResponseData {
-    NSDictionary *dict = [eventSuccessResponseData dictionary];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dict];
-    pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:eventSucceededCallbackId];
-}
-
-- (void)adjustEventTrackingFailed:(ADJEventFailure *)eventFailureResponseData {
-    NSDictionary *dict = [eventFailureResponseData dictionary];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dict];
-    pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:eventFailedCallbackId];
-}
-
-- (void)adjustSessionTrackingSucceeded:(ADJSessionSuccess *)sessionSuccessResponseData {
-    NSDictionary *dict = [sessionSuccessResponseData dictionary];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dict];
-    pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:sessionSucceededCallbackId];
-}
-
-- (void)adjustSessionTrackingFailed:(ADJSessionFailure *)sessionFailureResponseData {
-    NSDictionary *dict = [sessionFailureResponseData dictionary];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:dict];
-    pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:sessionFailedCallbackId];
-}
-
-- (BOOL)adjustDeeplinkResponse:(NSURL *)deeplink {
-    NSString *path = [deeplink absoluteString];
-
-    CDVPluginResult *pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsString:path];
-    pluginResult.keepCallback = [NSNumber numberWithBool:YES];
-
-    [self.commandDelegate sendPluginResult:pluginResult callbackId:deferredDeeplinkCallbackId];
-
-    return _shouldLaunchDeeplink;
+    [self.commandDelegate sendPluginResult:pluginResult callbackId:callbackId];
 }
 
 - (void)create:(CDVInvokedUrlCommand *)command {
@@ -111,21 +48,8 @@ BOOL _shouldLaunchDeeplink;
     NSString *sdkPrefix = [[command.arguments objectAtIndex:0] objectForKey:KEY_SDK_PREFIX];
     NSString *defaultTracker = [[command.arguments objectAtIndex:0] objectForKey:KEY_DEFAULT_TRACKER];
     NSNumber *eventBufferingEnabled = [[command.arguments objectAtIndex:0] objectForKey:KEY_EVENT_BUFFERING_ENABLED];
-    NSNumber *sendInBackground = [[command.arguments objectAtIndex:0] objectForKey:KEY_SEND_IN_BACKGROUND];
-    NSNumber *shouldLaunchDeeplink = [[command.arguments objectAtIndex:0] objectForKey:KEY_SHOULD_LAUNCH_DEEPLINK];
-    NSString *userAgent = [[command.arguments objectAtIndex:0] objectForKey:KEY_USER_AGENT];
-    NSNumber *delayStart = [[command.arguments objectAtIndex:0] objectForKey:KEY_DELAY_START];
 
-    BOOL allowSuppressLogLevel = false;
-
-    // Log level
-    if ([self isFieldValid:logLevel]) {
-        if ([ADJLogger LogLevelFromString:[logLevel lowercaseString]] == ADJLogLevelSuppress) {
-            allowSuppressLogLevel = true;
-        }
-    }
-
-    ADJConfig *adjustConfig = [ADJConfig configWithAppToken:appToken environment:environment allowSuppressLogLevel:allowSuppressLogLevel];
+    ADJConfig *adjustConfig = [ADJConfig configWithAppToken:appToken environment:environment];
 
     if ([adjustConfig isValid]) {
         // Log level
@@ -148,38 +72,12 @@ BOOL _shouldLaunchDeeplink;
             [adjustConfig setDefaultTracker:defaultTracker];
         }
 
-        // Attribution delegate & other delegates
-        if (attributionCallbackId != nil
-                || eventSucceededCallbackId != nil
-                || eventFailedCallbackId != nil
-                || sessionSucceededCallbackId != nil
-                || sessionFailedCallbackId != nil
-                || deferredDeeplinkCallbackId != nil) {
+        // Attribution delegate
+        if (callbackId != nil) {
             [adjustConfig setDelegate:self];
         }
 
-        // Send in background
-        if ([self isFieldValid:sendInBackground]) {
-            [adjustConfig setSendInBackground:[sendInBackground boolValue]];
-        }
-
-        // Should launch deeplink
-        if ([self isFieldValid:shouldLaunchDeeplink]) {
-            _shouldLaunchDeeplink = [shouldLaunchDeeplink boolValue];
-        }
-
-        // User agent
-        if ([self isFieldValid:userAgent]) {
-            [adjustConfig setUserAgent:userAgent];
-        }
-
-        // Delay start
-        if ([self isFieldValid:delayStart]) {
-            [adjustConfig setDelayStart:[delayStart doubleValue]];
-        }
-
         [Adjust appDidLaunch:adjustConfig];
-        [Adjust trackSubsessionStart];
     }
 }
 
@@ -297,98 +195,20 @@ BOOL _shouldLaunchDeeplink;
     [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 
-- (void)onPause:(CDVInvokedUrlCommand *)command {}
+- (void)onPause:(CDVInvokedUrlCommand *)command {
 
-- (void)onResume:(CDVInvokedUrlCommand *)command {}
+}
 
-- (void)getGoogleAdId:(CDVInvokedUrlCommand *)command {}
+- (void)onResume:(CDVInvokedUrlCommand *)command {
 
-- (void)sendFirstPackages:(CDVInvokedUrlCommand *)command {
-    [Adjust sendFirstPackages];
+}
+
+- (void)getGoogleAdId:(CDVInvokedUrlCommand *)command {
+    
 }
 
 - (void)setAttributionCallback:(CDVInvokedUrlCommand *)command {
-    attributionCallbackId = command.callbackId;
-}
-
-- (void)setEventTrackingSucceededCallback:(CDVInvokedUrlCommand *)command {
-    eventSucceededCallbackId = command.callbackId;
-}
-
-- (void)setEventTrackingFailedCallback:(CDVInvokedUrlCommand *)command {
-    eventFailedCallbackId = command.callbackId;
-}
-
-- (void)setSessionTrackingSucceededCallback:(CDVInvokedUrlCommand *)command {
-    sessionSucceededCallbackId = command.callbackId;
-}
-
-- (void)setSessionTrackingFailedCallback:(CDVInvokedUrlCommand *)command {
-    sessionFailedCallbackId = command.callbackId;
-}
-
-- (void)setDeferredDeeplinkCallback:(CDVInvokedUrlCommand *)command {
-    deferredDeeplinkCallbackId = command.callbackId;
-}
-
-- (void)addSessionCallbackParameter:(CDVInvokedUrlCommand *)command {
-    NSString *key = [command argumentAtIndex:0 withDefault:nil];
-    NSString *value = [command argumentAtIndex:1 withDefault:nil];
-
-    if (!([self isFieldValid:key]) || !([self isFieldValid:value])) {
-        return;
-    }
-
-    [Adjust addSessionCallbackParameter:key value:value];
-}
-
-- (void)removeSessionCallbackParameter:(CDVInvokedUrlCommand *)command {
-    NSString *key = [command argumentAtIndex:0 withDefault:nil];
-
-    if (!([self isFieldValid:key])) {
-        return;
-    }
-
-    [Adjust removeSessionCallbackParameter:key];
-}
-
-- (void)resetSessionCallbackParameters:(CDVInvokedUrlCommand *)command {
-    [Adjust resetSessionCallbackParameters];
-}
-
-- (void)addSessionPartnerParameter:(CDVInvokedUrlCommand *)command {
-    NSString *key = [command argumentAtIndex:0 withDefault:nil];
-    NSString *value = [command argumentAtIndex:1 withDefault:nil];
-
-    if (!([self isFieldValid:key]) || !([self isFieldValid:value])) {
-        return;
-    }
-
-    [Adjust addSessionPartnerParameter:key value:value];
-}
-
-- (void)removeSessionPartnerParameter:(CDVInvokedUrlCommand *)command {
-    NSString *key = [command argumentAtIndex:0 withDefault:nil];
-
-    if (!([self isFieldValid:key])) {
-        return;
-    }
-
-    [Adjust removeSessionPartnerParameter:key];
-}
-
-- (void)resetSessionPartnerParameters:(CDVInvokedUrlCommand *)command {
-    [Adjust resetSessionPartnerParameters];
-}
-
-- (void)setPushToken:(CDVInvokedUrlCommand *)command {
-    NSString *token = [command argumentAtIndex:0 withDefault:nil];
-
-    if (!([self isFieldValid:token])) {
-        return;
-    }
-
-    [Adjust setDeviceToken:token];
+    callbackId = command.callbackId;
 }
 
 - (BOOL)isFieldValid:(NSObject *)field {
@@ -397,7 +217,7 @@ BOOL _shouldLaunchDeeplink;
             return YES;
         }
     }
-
+    
     return NO;
 }
 
